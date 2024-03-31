@@ -10,6 +10,7 @@ import aws.sdk.kotlin.services.rekognition.model.DetectLabelsRequest
 import aws.sdk.kotlin.services.rekognition.model.Image
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
+import aws.sdk.kotlin.services.rekognition.model.DetectTextRequest
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,20 +32,19 @@ class MyService : Service() {
                 val souImage = Image {
                     bytes = imageBytes
                 }
-                val request = DetectLabelsRequest {
+                val request = DetectTextRequest {
                     image = souImage
-                    maxLabels = 10
                 }
                 RekognitionClient {
                     region = "us-west-1"
                     credentialsProvider = StaticCredentialsProvider(credential)
                 }.use { rekClient ->
-                    val response = rekClient.detectLabels(request)
-                    response.labels?.forEach { label ->
-                        Log.d("MyService", "detected ${label.name} : ${label.confidence}")
+                    val response = rekClient.detectText(request)
+                    response.textDetections?.forEach { label ->
+                        Log.d("MyService", "detected ${label.detectedText} : ${label.confidence}")
                     }
                     Intent("cmpe277.app4.UPDATE_ACTIVITY").also {
-                        it.putExtra("response", response.labels?.map { it -> "${it.name}: ${it.confidence}" }?.toTypedArray())
+                        it.putExtra("response", response.textDetections?.map { label -> "${label.detectedText}: ${label.confidence}" }?.toTypedArray())
                         sendBroadcast(it)
                     }
                 }
